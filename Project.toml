@@ -1,0 +1,13 @@
+name = "MultiAgentEmergence"
+uuid = "6efdc3e2-65f5-49e0-b0e5-5cf75fc7274f"
+authors = ["Liam <lsmith7661@gmail.com>"]
+version = "0.1.0"
+
+[deps]
+IJulia = "7073ff75-c697-5162-941a-fcdaad2a7d2a"
+POMDPModelTools = "08074719-1b2a-587c-a292-00f91cc44415"
+POMDPSimulators = "e0d0a172-29c6-5d4e-96d0-f262df5d01fd"
+POMDPs = "a93abf59-7444-517b-a68a-c42f96afdd7d"
+Pkg = "44cfe95a-1eb2-52ea-b672-e2afdf69b78f"
+QMDP = "3aa3ecc9-5a5d-57c8-8188-3e47bd8068d2"
+QuickPOMDPs = "8af83fb2-a731-493c-9049-9e19dbce6165"

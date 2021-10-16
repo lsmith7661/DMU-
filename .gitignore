@@ -1,5 +1,5 @@
 # Ignore everything
-*
+/*
 
 # But not these files...
 !.gitignore
@@ -7,5 +7,11 @@
 !.toml
 !.jl
 
+# src 
+!/src/.jl
+!/src/models/.jl
+
+# test
+!/test/.jl
 
 # etc...

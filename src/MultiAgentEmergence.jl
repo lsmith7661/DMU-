@@ -17,9 +17,13 @@ include("models/common_pool.jl")
 export
     CommonPool,
     CommonPoolState,
+    AgentState,
     ResourceState,
+    available,
     posequal,
     neighbors,
+    respawn,
+    respawn!,
     inbounds
 
 end # module

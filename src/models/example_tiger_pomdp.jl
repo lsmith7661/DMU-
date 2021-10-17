@@ -1,4 +1,3 @@
-using POMDPs, QuickPOMDPs, POMDPModelTools, POMDPSimulators, QMDP
 
 function example_tiger_pomdp()
     m = QuickPOMDP(

@@ -4,6 +4,7 @@ module MultiAgentEmergence
 HelloWorld = "Hello World!"
 
 # Import
+using POMDPs, QuickPOMDPs, POMDPModelTools, POMDPSimulators, QMDP
 
 export 
     # constants

@@ -6,7 +6,7 @@ HelloWorld = "Hello World!"
 # Import
 using POMDPs, QuickPOMDPs, POMDPModelTools, POMDPSimulators, QMDP
 
-export 
+export
     # constants
     HelloWorld,
 

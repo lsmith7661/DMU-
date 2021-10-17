@@ -117,6 +117,7 @@ function POMDPs.states(mdp::CommonPool)
         push!(resource, ResourceState(x,y,b,p))
     end
     s = CommonPoolState[]       # initialize an array of mdp states
+    #FIXME: CommonPoolStates contain array of resources, not resources.... gaaaah
     for a in agent, r in resource
         push!(s,CommonPoolState(a,r))
     end

@@ -19,6 +19,7 @@ export
     CommonPoolState,
     ResourceState,
     posequal,
-    neighbors
+    neighbors,
+    inbounds
 
 end # module

@@ -35,7 +35,7 @@ function neighbors(s1::ResourceState, r::Int64)
     cy = s1.y
     s = ResourceState[]
     for x in cx-r:cx+r 
-        y = sqrt(r*r - x*x)
+        y = sqrt(r*r - (x-cx)*(x-cx))
         for y in cy-r:cy+r
             rs = ResourceState(x,y)
             if !posequal(s1,rs)
@@ -84,4 +84,3 @@ function inbounds(mdp::CommonPool,x::Int64,y::Int64)
     1 <= x <= mdp.size_x && 1 <= y <= mdp.size_y
 end
 inbounds(mdp::CommonPool, s::Union{CommonPoolState,ResourceState}) = inbounds(mdp, s.x, s.y);
-

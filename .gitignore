@@ -8,10 +8,18 @@
 !.jl
 
 # src 
-!/src/.jl
-!/src/models/.jl
+!/src/
+/src/*
+!/src/*.jl
+
+# models
+!/src/models/
+!/src/models/*
+!/src/models/*.jl
 
 # test
-!/test/.jl
+!/test/
+/test/*
+!/test/*.jl
 
 # etc...

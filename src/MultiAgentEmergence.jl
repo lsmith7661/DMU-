@@ -2,17 +2,23 @@ module MultiAgentEmergence
 
 # Hello World
 HelloWorld = "Hello World!"
-
-# Import
-using POMDPs, QuickPOMDPs, POMDPModelTools, POMDPSimulators, QMDP
-
 export
-    # constants
-    HelloWorld,
+    HelloWorld
 
-    # models
+# Example 
+using POMDPs, QuickPOMDPs, POMDPModelTools, POMDPSimulators, QMDP
+include("models/example_tiger_pomdp.jl")
+export
     example_tiger_pomdp
 
-include("models/example_tiger_pomdp.jl")
+# Common Pool
+using POMDPs, POMDPModelTools, POMDPPolicies, POMDPSimulators
+include("models/common_pool.jl")
+export
+    CommonPool,
+    CommonPoolState,
+    ResourceState,
+    posequal,
+    neighbors
 
 end # module

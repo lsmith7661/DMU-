@@ -5,7 +5,7 @@ myagent = AgentState(5,5)
 myresource = ResourceState(5,5)
 resourcevec = [ResourceState(4,4),ResourceState(5,6),ResourceState(4,5,false)]
 
-# Type
+# type
 @test typeof(mypool) == MultiAgentEmergence.CommonPool  
 
 # available

@@ -1,11 +1,14 @@
 # a simple 2D environment with common pool resources
-using POMDPs, POMDPModelTools, POMDPPolicies, POMDPSimulators, StaticArrays
+
+# rng - default rng is repeatable
+rng = MersenneTwister(1234)
 
 # agent
 struct AgentState 
     x::Int64 # x position
     y::Int64 # y position
 end
+AgentState() = AgentState(1,1)
 
 # resources
 struct ResourceState
@@ -22,9 +25,10 @@ available(rs::ResourceState) = available([rs])
 # mdp state
 struct CommonPoolState
     Agent::AgentState
-    #FIXME: Change to SVector
-    Resource::AbstractArray{ResourceState}
+    #FIXME: Change to SVectors
+    Resources::AbstractArray{ResourceState}
 end
+CommonPoolState() = CommonPoolState()
 
 # checks if the position of two states are the same
 posequal(s1::Union{AgentState,ResourceState}, s2::Union{AgentState,ResourceState}) = s1.x == s2.x && s1.y == s2.y
@@ -36,6 +40,21 @@ neighbors(s1::AgentState) = [
                             AgentState(s1.x, s1.y-1), # down
                             AgentState(s1.x, s1.y+1), # up
                             ]
+function neighbors(s1::AgentState,r::Int64)
+    cx = s1.x
+    cy = s1.y
+    s = AgentState[]
+    for x in cx-r:cx+r 
+        y = sqrt(r*r - (x-cx)*(x-cx))
+        for y in cy-r:cy+r
+            as = AgentState(x,y)
+            if !posequal(s1,as)
+                push!(s,as)
+            end
+        end
+    end
+    return s
+end   
 function neighbors(s1::ResourceState, r::Int64)
     cx = s1.x
     cy = s1.y
@@ -54,8 +73,20 @@ end
 neighbors(s1::ResourceState) = neighbors(s1::ResourceState,1)
 
 # respawn - probability that resource will respond as function of surrounding resources
-function respawn(rs::ResourceState,rsvec::AbstractArray{ResourceState})
-    num = length(findall(x->x in neighbors(rs), available(rsvec)))
+function respawn(rs::ResourceState,rsvec::AbstractArray{ResourceState},rng::AbstractRNG)
+    
+    # update respawn rate
+    # num = length(findall(x->x in neighbors(rs), available(rsvec))) # how annons work with two varrrrs :(
+    temp1 = []
+    for n in neighbors(rs)
+        temp2 = []
+        for ar in available(rsvec)
+            push!(temp2,posequal(n,ar))
+        end
+        push!(temp1,any(temp2))
+    end
+    num = sum(temp1)
+
     if num == 0
         p = 0.
     elseif num <= 2
@@ -65,28 +96,29 @@ function respawn(rs::ResourceState,rsvec::AbstractArray{ResourceState})
     elseif num > 4
         p = 0.1
     end
-    return ResourceState(rs.x,rs.y,rs.on,p)
+
+    # respawn?
+    on = any([rs.on,p > rand(rng)])
+
+    return ResourceState(rs.x,rs.y,on,p)
 end
-function respawn!(rs::ResourceState,rsvec::AbstractArray{ResourceState}) 
-    #FIXME: the bang versions of respawn don't mutate rs for whatever reason 
-    rs = respawn(rs,rsvec)
-end
+respawn(rs::ResourceState,rsvec::AbstractArray{ResourceState}) = respawn(rs,rsvec,rng)
 respawn(rs::ResourceState,state::CommonPoolState) = respawn(rs,state.Resource)
-function respawn(state::CommonPoolState) # update all resrouces in mdp
-    newvec = ResourceState[] #FIXME: SVector
-    rsvec = state.Resource
+function respawn(rsvec::AbstractArray,rng::AbstractRNG) # update all resrouces in an array
+    #FIXME: SVector
+    newvec = ResourceState[] 
     for rs in rsvec
-        push!(newvec,respawn(rs,rsvec))
+        push!(newvec,respawn(rs,rsvec,rng))
     end
-    return CommonPoolState(state.Agent,newvec)
+    return newvec
 end
-function respawn!(state::CommonPoolState)
-    #FIXME: the bang versions of respawn don't mutate rs for whatever reason 
-    state = respawn(state)
-end
+respawn(rsvec::AbstractArray) = respawn(rsvec,rng)
 
 # actions
-action = :up # can also be :down, :left, :right
+right(agent::AgentState) = AgentState(agent.x+1,agent.y)
+left(agent::AgentState) = AgentState(agent.x-1,agent.y)
+up(agent::AgentState) = AgentState(agent.x,agent.y+1)
+down(agent::AgentState) = AgentState(agent.x,agent.y-1)
 
 # the common pool world mdp type
 struct CommonPool <: MDP{CommonPoolState, Symbol} # MDP is parametarized by the state and the action
@@ -106,7 +138,8 @@ function CommonPool(;
     return CommonPool(sx, sy, amap, r, discount_factor)
 end
 
-# extend POMMDP.states()
+# need to use generative model
+#= extend POMMDP.states() 
 function POMDPs.states(mdp::CommonPool)
     agent = AgentState[]        # initialize an array of agent states
     for y = 1:mdp.size_y, x = 1:mdp.size_x
@@ -121,7 +154,7 @@ function POMDPs.states(mdp::CommonPool)
     for a in agent, r in resource
         push!(s,CommonPoolState(a,r))
     end
-end
+end =#
 
 # extend POMDP.actions()
 POMDPs.actions(mdp::CommonPool) = [:up, :down, :left, :right];
@@ -132,43 +165,94 @@ function inbounds(mdp::CommonPool,x::Int64,y::Int64)
 end
 inbounds(mdp::CommonPool, s::Union{AgentState,ResourceState}) = inbounds(mdp, s.x, s.y);
 
-#=
-# Transition
-function POMDPs.transition(mdp::CommonPool, state::CommonPoolState, action::Symbol)
-    a = action
-    x = state.x
-    y = state.y
-
-    neighbors = [
-        CommonPoolState(x+1, y), # right
-        CommonPoolState(x-1, y), # left
-        CommonPoolState(x, y-1), # down
-        CommonPoolState(x, y+1), # up
-        ] # See Performance Note below
+# generative model
+function POMDPs.gen(m::CommonPool, s::CommonPoolState, a::Symbol, rng::AbstractRNG)
     
-    targets = Dict(:right=>1, :left=>2, :down=>3, :up=>4) # See Performance Note below
-    target = targets[a]
-    
-    probability = fill(0.0, 4)
+    # update agent deterministically, Dict(:right=>1, :left=>2, :down=>3, :up=>4)
+    @assert(any(x->x==a, POMDPs.actions(m)))
+    if a == :right
+        agent = right(s.Agent)
+    elseif a == :left
+        agent = left(s.Agent)
+    elseif a == :down
+        agent = down(s.Agent)
+    elseif a == :up
+        agent = up(s.Agent)
+    end
 
-    if !inbounds(mdp, neighbors[target])
-        # If would transition out of bounds, stay in
-        # same cell with probability 1
-        return SparseCat([GridWorldState(x, y)], [1.0])
-    else
-        probability[target] = mdp.tprob
+    # enforce bounds on new agent sate
+    if !inbounds(m,agent)
+        agent = s.Agent
+    end
 
-        oob_count = sum(!inbounds(mdp, n) for n in neighbors) # number of out of bounds neighbors
-
-        new_probability = (1.0 - mdp.tprob)/(3-oob_count)
-
-        for i = 1:4 # do not include neighbor 5
-            if inbounds(mdp, neighbors[i]) && i != target
-                probability[i] = new_probability
-            end
+    # add reward if at resource, turn off reward if collected
+    r = 0
+    resources = ResourceState[]
+    for rs in s.Resources
+        if posequal(agent,rs) && rs.on
+            r = m.reward_val
+            push!(resources,ResourceState(rs.x,rs.y,false,rs.p))
+        else
+            push!(resources,rs)
         end
     end
 
-    return SparseCat(neighbors, probability)
+    # update resources respawn probabilities
+    resources = respawn(resources,rng)
+
+    # update state (s')
+    sp = CommonPoolState(agent,resources)
+    
+    # observation model - boolean array, true if neighbor is an active resource square
+    #FIXME: what the heck should this be
+    o = []
+    for n in neighbors(agent,1)
+        temp = []
+        for rs in available(resources)
+            push!(temp,posequal(n,rs))
+        end
+        push!(o,any(temp))
+    end
+
+    # create and return a NamedTuple for POMDPs interface
+    return (sp=sp, o=o, r=r)
 end
-=#
+POMDPs.gen(m::CommonPool, s::CommonPoolState, a::Symbol) = POMDPs.gen(m, s, a, rng)
+
+# default starting maps
+function DefaultMap(mdp::CommonPool) 
+    @assert(mdp.size_x > 3)
+    @assert(mdp.size_y > 3)
+    cx = trunc(Int64,mdp.size_x/2)
+    cy = trunc(Int64,mdp.size_y/2)
+    Resources = [
+        ResourceState(cx,cy),
+        ResourceState(cx+1,cy),                
+        ResourceState(cx-1,cy),
+        ResourceState(cx,cy+1),                
+        ResourceState(cx,cy-1)
+        ]
+    return CommonPoolState(AgentState(1,1),Resources)
+end
+
+function RandomMap(mdp::CommonPool,rng::AbstractRNG) 
+    @assert(mdp.size_x > 3)
+    @assert(mdp.size_y > 3)
+    cx = rand(rng,1:mdp.size_x)
+    cy = rand(rng,1:mdp.size_y)
+    Resources = [
+        ResourceState(cx,cy),
+        ResourceState(cx+1,cy),                
+        ResourceState(cx-1,cy),
+        ResourceState(cx,cy+1),                
+        ResourceState(cx,cy-1)
+        ]
+    ResourcesPruned = ResourceState[]
+    for r in Resources
+        if inbounds(mdp,r)
+            push!(ResourcesPruned,r)
+        end
+    end
+    return CommonPoolState(AgentState(rand(rng,1:mdp.size_x),rand(rng,1:mdp.size_y)),ResourcesPruned)
+end  
+RandomMap(mdp::CommonPool) = RandomMap(mdp,rng)

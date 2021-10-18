@@ -12,7 +12,7 @@ export
     example_tiger_pomdp
 
 # Common Pool
-using POMDPs, POMDPModelTools, POMDPPolicies, POMDPSimulators
+using POMDPs, POMDPModelTools, POMDPPolicies, POMDPSimulators, StaticArrays, Random
 include("models/common_pool.jl")
 export
     CommonPool,
@@ -23,7 +23,8 @@ export
     posequal,
     neighbors,
     respawn,
-    respawn!,
-    inbounds
+    inbounds,
+    DefaultMap,
+    RandomMap
 
 end # module

@@ -27,4 +27,11 @@ export
     DefaultMap,
     RandomMap
 
+# Visualization
+using POMDPModelTools, Compose
+include("visualization/visualization.jl")
+export 
+    render,
+    render_example
+
 end # module

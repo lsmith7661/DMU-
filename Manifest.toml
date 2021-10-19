@@ -23,9 +23,21 @@ version = "0.2.2"
 
 [[ChainRulesCore]]
 deps = ["Compat", "LinearAlgebra", "SparseArrays"]
-git-tree-sha1 = "2f294fae04aa5069a67964a3366e151e09ea7c09"
+git-tree-sha1 = "8d954297bc51cc64f15937c2093799c3617b73e4"
 uuid = "d360d2e6-b24c-11e9-a2a3-2a2ae2dbcce4"
-version = "1.9.0"
+version = "1.10.0"
+
+[[ColorTypes]]
+deps = ["FixedPointNumbers", "Random"]
+git-tree-sha1 = "024fe24d83e4a5bf5fc80501a314ce0d1aa35597"
+uuid = "3da002f7-5984-5a60-b8a6-cbb66c0b333f"
+version = "0.11.0"
+
+[[Colors]]
+deps = ["ColorTypes", "FixedPointNumbers", "Reexport"]
+git-tree-sha1 = "417b0ed7b8b838aa6ca0a87aadf1bb9eb111ce40"
+uuid = "5ae59095-9a9b-59fe-a467-6f913c188581"
+version = "0.12.8"
 
 [[CommonRLInterface]]
 deps = ["MacroTools"]
@@ -44,6 +56,12 @@ deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
 git-tree-sha1 = "8e695f735fca77e9708e795eda62afdb869cbb70"
 uuid = "e66e0078-7015-5450-92f7-15fbd957f2ae"
 version = "0.3.4+0"
+
+[[Compose]]
+deps = ["Base64", "Colors", "DataStructures", "Dates", "IterTools", "JSON", "LinearAlgebra", "Measures", "Printf", "Random", "Requires", "Statistics", "UUIDs"]
+git-tree-sha1 = "c6461fc7c35a4bb8d00905df7adafcff1fe3a6bc"
+uuid = "a81c6b42-2e10-5240-aca2-a61377ecd94b"
+version = "0.9.2"
 
 [[Conda]]
 deps = ["JSON", "VersionParsing"]
@@ -117,6 +135,12 @@ git-tree-sha1 = "693210145367e7685d8604aee33d9bfb85db8b31"
 uuid = "1a297f60-69ca-5386-bcde-b61e274b549b"
 version = "0.11.9"
 
+[[FixedPointNumbers]]
+deps = ["Statistics"]
+git-tree-sha1 = "335bfdceacc84c5cdf16aadc768aa5ddfc5383cc"
+uuid = "53c48c17-4a7d-5ca2-90c5-79b7896eea93"
+version = "0.8.4"
+
 [[Formatting]]
 deps = ["Printf"]
 git-tree-sha1 = "8339d61043228fdd3eb658d86c926cb282ae72a8"
@@ -151,6 +175,11 @@ version = "1.1.0"
 git-tree-sha1 = "7fd44fd4ff43fc60815f8e764c0f352b83c49151"
 uuid = "92d709cd-6900-40b7-9082-c6be49f344b6"
 version = "0.1.1"
+
+[[IterTools]]
+git-tree-sha1 = "05110a2ab1fc5f932622ffea2a003221f4782c18"
+uuid = "c8e1da08-722c-5040-9ed9-7db0dc04731e"
+version = "1.3.0"
 
 [[IteratorInterfaceExtensions]]
 git-tree-sha1 = "a3f24677c21f5bbe9d2a714f95dcd58337fb2856"
@@ -216,6 +245,11 @@ deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
 git-tree-sha1 = "0eef589dd1c26a3ac9d753fe1a8bcad63f956fa6"
 uuid = "c8ffd9c3-330d-5841-b78e-0817d7145fa1"
 version = "2.16.8+1"
+
+[[Measures]]
+git-tree-sha1 = "e498ddeee6f9fdb4551ce855a46f54dbd900245f"
+uuid = "442fdcdd-2543-5da2-b0f3-8c86c306513e"
+version = "0.3.1"
 
 [[Missings]]
 deps = ["DataAPI"]
@@ -320,9 +354,9 @@ version = "1.2.2"
 
 [[PrettyTables]]
 deps = ["Crayons", "Formatting", "Markdown", "Reexport", "Tables"]
-git-tree-sha1 = "69fd065725ee69950f3f58eceb6d144ce32d627d"
+git-tree-sha1 = "d940010be611ee9d67064fe559edbb305f8cc0eb"
 uuid = "08abe8d2-0d0c-5749-adfa-8a2ac140af0d"
-version = "1.2.2"
+version = "1.2.3"
 
 [[Printf]]
 deps = ["Unicode"]
@@ -364,6 +398,12 @@ uuid = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
 git-tree-sha1 = "45e428421666073eab6f2da5c9d310d99bb12f9b"
 uuid = "189a3867-3050-52da-a836-e630ba90ab69"
 version = "1.2.2"
+
+[[Requires]]
+deps = ["UUIDs"]
+git-tree-sha1 = "4036a3bd08ac7e968e27c203d45f5fff15020621"
+uuid = "ae029012-a4dd-5104-9daa-d747884805df"
+version = "1.1.3"
 
 [[Rmath]]
 deps = ["Random", "Rmath_jll"]
@@ -414,9 +454,9 @@ uuid = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
 
 [[SpecialFunctions]]
 deps = ["ChainRulesCore", "IrrationalConstants", "LogExpFunctions", "OpenLibm_jll", "OpenSpecFun_jll"]
-git-tree-sha1 = "793793f1df98e3d7d554b65a107e9c9a6399a6ed"
+git-tree-sha1 = "2d57e14cd614083f132b6224874296287bfa3979"
 uuid = "276daf66-3868-5448-9aa4-cd146d93841b"
-version = "1.7.0"
+version = "1.8.0"
 
 [[StaticArrays]]
 deps = ["LinearAlgebra", "Random", "Statistics"]
@@ -435,9 +475,9 @@ version = "1.0.0"
 
 [[StatsBase]]
 deps = ["DataAPI", "DataStructures", "LinearAlgebra", "LogExpFunctions", "Missings", "Printf", "Random", "SortingAlgorithms", "SparseArrays", "Statistics", "StatsAPI"]
-git-tree-sha1 = "65fb73045d0e9aaa39ea9a29a5e7506d9ef6511f"
+git-tree-sha1 = "eb35dcc66558b2dda84079b9a1be17557d32091a"
 uuid = "2913bbd2-ae8a-5f71-8c99-4fb6c76f3a91"
-version = "0.33.11"
+version = "0.33.12"
 
 [[StatsFuns]]
 deps = ["ChainRulesCore", "IrrationalConstants", "LogExpFunctions", "Reexport", "Rmath", "SpecialFunctions"]

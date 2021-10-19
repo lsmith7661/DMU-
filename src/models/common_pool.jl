@@ -137,6 +137,15 @@ function CommonPool(;
     )
     return CommonPool(sx, sy, amap, r, discount_factor)
 end
+function CommonPool(
+    sx::Int64,
+    sy::Int64;
+    amap::Dict=Dict(:right=>1, :left=>2, :down=>3, :up=>4),
+    r::Int64=10,
+    discount_factor::Float64=0.9
+    )
+    return CommonPool(sx, sy, amap, r, discount_factor)
+end
 
 # need to use generative model
 #= extend POMMDP.states() 

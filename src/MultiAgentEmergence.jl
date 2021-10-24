@@ -12,7 +12,7 @@ export
     example_tiger_pomdp
 
 # Common Pool
-using POMDPs, POMDPModelTools, POMDPPolicies, POMDPSimulators, StaticArrays, Random
+using POMDPs, POMDPModelTools, POMDPSimulators, StaticArrays, Random
 include("models/common_pool.jl")
 export
     CommonPool,
@@ -25,13 +25,28 @@ export
     respawn,
     inbounds,
     DefaultMap,
-    RandomMap
+    RandomMap,
+    utility,
+    equality,
+    sustainability
 
 # Visualization
-using POMDPModelTools, Compose
+import POMDPModelTools: render
+using Compose
+import Plots: plot # Why do I need Unicode? Warning: Error requiring `UnicodePlots` from `Plots`
+
 include("visualization/visualization.jl")
 export 
     render,
-    render_example
+    render_example,
+    plot_socials
+
+# Policies 
+using POMDPPolicies, Random
+include("policies/randompolicy.jl")
+include("policies/greedypolicy.jl")
+export
+    random_policy,
+    greedy_policy
 
 end # module

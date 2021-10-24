@@ -17,6 +17,16 @@
 !/src/models/*
 !/src/models/*.jl
 
+# policies
+!/src/policies/
+!/src/policies/*
+!/src/policies/*.jl
+
+# visualization
+!/src/visualization/
+!/src/visualization/*
+!/src/visualization/*.jl
+
 # test
 !/test/
 /test/*

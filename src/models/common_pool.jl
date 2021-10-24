@@ -48,9 +48,16 @@ function neighbors(s1::AgentState,r::Int64)
         y = sqrt(r*r - (x-cx)*(x-cx))
         for y in cy-r:cy+r
             as = AgentState(x,y)
-            if !posequal(s1,as)
+            #if !posequal(s1,as) # Dont include agent in its neighbors
+            """
+            Note: Going to include agent in this because it makes it 
+            easier to create an observation grid (center isnt missing) 
+            which makes calculating heuristic policies easier. The cost 
+            is one extra element in the obs array which could be a lot 
+            of extra connections in a dense Q-network... FIXME?  
+            """
                 push!(s,as)
-            end
+            #end
         end
     end
     return s
@@ -63,7 +70,7 @@ function neighbors(s1::ResourceState, r::Int64)
         y = sqrt(r*r - (x-cx)*(x-cx))
         for y in cy-r:cy+r
             rs = ResourceState(x,y)
-            if !posequal(s1,rs)
+            if !posequal(s1,rs) # dont include resource in its neightbors
                 push!(s,rs)
             end
         end
@@ -129,8 +136,8 @@ struct CommonPool <: MDP{CommonPoolState, Symbol} # MDP is parametarized by the 
     discount_factor::Float64        # disocunt factor
 end
 function CommonPool(;
-    sx::Int64=10,
-    sy::Int64=10,
+    sx::Int64=9,
+    sy::Int64=9,
     amap::Dict=Dict(:right=>1, :left=>2, :down=>3, :up=>4),
     r::Int64=10,
     discount_factor::Float64=0.9
@@ -146,6 +153,9 @@ function CommonPool(
     )
     return CommonPool(sx, sy, amap, r, discount_factor)
 end
+
+# discount factor
+POMDPs.discount(mdp::CommonPool) = mdp.discount_factor
 
 # need to use generative model
 #= extend POMMDP.states() 
@@ -215,7 +225,7 @@ function POMDPs.gen(m::CommonPool, s::CommonPoolState, a::Symbol, rng::AbstractR
     # observation model - boolean array, true if neighbor is an active resource square
     #FIXME: what the heck should this be
     o = []
-    for n in neighbors(agent,1)
+    for n in neighbors(agent,3)
         temp = []
         for rs in available(resources)
             push!(temp,posequal(n,rs))
@@ -228,40 +238,92 @@ function POMDPs.gen(m::CommonPool, s::CommonPoolState, a::Symbol, rng::AbstractR
 end
 POMDPs.gen(m::CommonPool, s::CommonPoolState, a::Symbol) = POMDPs.gen(m, s, a, rng)
 
+# social metrics
+function utility(h::POMDPSimulators.SimHistory)
+    r = collect(eachstep(h, "r")) # Note: r is a single value at each step with one agent. when multiple agents it should be an array
+    R = sum(r) # FIXME: sum along each agent 
+    return  sum(R)/n_steps(h)
+end
+    
+function equality(h::POMDPSimulators.SimHistory)
+    r = collect(eachstep(h, "r")) # Note: r is a single value at each step with one agent. when multiple agents it should be an array
+    R = sum(r) # FIXME: sum along each agent 
+    numsum = 0.0
+    for ri in R, rj in R
+        numsum += abs(ri-rj)
+    end
+    return 1 - (numsum / (2*length(R)*sum(R)))
+end
+
+function sustainability(h::POMDPSimulators.SimHistory)
+    r = collect(eachstep(h, "r")) # Note: r is a single value at each step with one agent. when multiple agents it should be an array
+    t = sum(findall(x->x>0, r)) # FIXME: do for each agent 
+    return sum(t)/length(t)
+end
+
 # default starting maps
+function _resource_flower(x::Int64, y::Int64)
+    return [
+        ResourceState(x,y),
+        ResourceState(x+1,y),                
+        ResourceState(x-1,y),
+        ResourceState(x,y+1),                
+        ResourceState(x,y-1)
+        ]
+end
+
+function _prune_resources(mdp::CommonPool, resources::AbstractArray{ResourceState})
+    resources_pruned = ResourceState[]
+    for r in resources
+        if inbounds(mdp,r)
+            push!(resources_pruned,r)
+        end
+    end
+
+    # FIXME: Edge case where resources share same square, prune one of them
+
+    return resources_pruned
+end
+
 function DefaultMap(mdp::CommonPool) 
     @assert(mdp.size_x > 3)
     @assert(mdp.size_y > 3)
-    cx = trunc(Int64,mdp.size_x/2)
-    cy = trunc(Int64,mdp.size_y/2)
-    Resources = [
-        ResourceState(cx,cy),
-        ResourceState(cx+1,cy),                
-        ResourceState(cx-1,cy),
-        ResourceState(cx,cy+1),                
-        ResourceState(cx,cy-1)
-        ]
-    return CommonPoolState(AgentState(1,1),Resources)
+    # Center
+    # cx = trunc(Int64,mdp.size_x/2)
+    # cy = trunc(Int64,mdp.size_y/2)
+    # Resources = _resource_flower(cx,cy)
+
+    # Rows
+    Resources = ResourceState[]
+    for cy in [3,mdp.size_y-2] # 2 rows at top and bottom
+        cx = -1
+        while cx < mdp.size_x - 1 # full row of flowers
+            cx += 3
+            push!(Resources,_resource_flower(cx,cy)...)
+        end
+    end
+    ResourcesPruned = _prune_resources(mdp,Resources)
+    return CommonPoolState(AgentState(1,1),ResourcesPruned)
 end
+POMDPs.initialstate_distribution(m::CommonPool) = Deterministic(DefaultMap(m))
 
 function RandomMap(mdp::CommonPool,rng::AbstractRNG) 
     @assert(mdp.size_x > 3)
     @assert(mdp.size_y > 3)
     cx = rand(rng,1:mdp.size_x)
     cy = rand(rng,1:mdp.size_y)
-    Resources = [
-        ResourceState(cx,cy),
-        ResourceState(cx+1,cy),                
-        ResourceState(cx-1,cy),
-        ResourceState(cx,cy+1),                
-        ResourceState(cx,cy-1)
-        ]
-    ResourcesPruned = ResourceState[]
-    for r in Resources
-        if inbounds(mdp,r)
-            push!(ResourcesPruned,r)
-        end
-    end
+    Resources1 = _resource_flower(cx,cy)
+    cx = rand(rng,1:mdp.size_x)
+    cy = rand(rng,1:mdp.size_y)  
+    Resources2 = _resource_flower(cx,cy)
+    cx = rand(rng,1:mdp.size_x)
+    cy = rand(rng,1:mdp.size_y)  
+    Resources3 = _resource_flower(cx,cy)
+    cx = rand(rng,1:mdp.size_x)
+    cy = rand(rng,1:mdp.size_y)  
+    Resources4 = _resource_flower(cx,cy)
+    Resources = vcat(Resources1, Resources2, Resources3, Resources4)
+    ResourcesPruned = _prune_resources(mdp,Resources)
     return CommonPoolState(AgentState(rand(rng,1:mdp.size_x),rand(rng,1:mdp.size_y)),ResourcesPruned)
 end  
 RandomMap(mdp::CommonPool) = RandomMap(mdp,rng)

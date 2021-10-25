@@ -81,7 +81,6 @@ neighbors(s1::ResourceState) = neighbors(s1::ResourceState,1)
 
 # respawn - probability that resource will respond as function of surrounding resources
 function respawn(rs::ResourceState,rsvec::AbstractArray{ResourceState},rng::AbstractRNG)
-    
     # update respawn rate
     # num = length(findall(x->x in neighbors(rs), available(rsvec))) # how annons work with two varrrrs :(
     temp1 = []
@@ -209,6 +208,8 @@ function POMDPs.observation(sp::CommonPoolState, obs_range::Int)
     return Deterministic(o)
 end
 POMDPs.observation(sp::CommonPoolState) = POMDPs.observation(sp, 3)
+
+POMDPs.initialobs(pomdp::CommonPool, s::CommonPoolState) = POMDPs.observation(s)
 
  # bounds check
 function inbounds(mdp::CommonPool,x::Int64,y::Int64)
@@ -355,3 +356,7 @@ function RandomMap(mdp::CommonPool,rng::AbstractRNG)
     return CommonPoolState(AgentState(rand(rng,1:mdp.size_x),rand(rng,1:mdp.size_y)),ResourcesPruned)
 end  
 RandomMap(mdp::CommonPool) = RandomMap(mdp,rng)
+
+## Belief Stuff
+POMDPs.updater(::AbstractNNPolicy) = PreviousObservationUpdater()
+POMDPs.initialize_belief(u::PreviousObservationUpdater, d::Deterministic{CommonPoolState}) = rand(POMDPs.observation(rand(d)))

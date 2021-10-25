@@ -18,7 +18,7 @@ function greedy(input::Union{Deterministic,AbstractArray{Bool}})
         sp_dist = input
 
         # Create observations from state
-        o_dist = POMDPs.observation(rand(sp_dist),1)
+        o_dist = POMDPs.observation(rand(sp_dist))
 
         # Sample from observation distribution
         o = rand(o_dist)

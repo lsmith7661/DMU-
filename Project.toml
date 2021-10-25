@@ -4,6 +4,7 @@ authors = ["Liam <lsmith7661@gmail.com>"]
 version = "0.1.0"
 
 [deps]
+BeliefUpdaters = "8bb6e9a1-7d73-552c-a44a-e5dc5634aac4"
 BlinkPOMDPSimulator = "cd197ee6-b873-11e8-324e-2bd8ebd9d51c"
 Compose = "a81c6b42-2e10-5240-aca2-a61377ecd94b"
 DeepQLearning = "de0a67f4-c691-11e8-0034-5fc6e16e22d3"

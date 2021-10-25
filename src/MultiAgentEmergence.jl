@@ -12,7 +12,7 @@ export
     example_tiger_pomdp
 
 # Common Pool
-using POMDPs, POMDPModelTools, POMDPSimulators, StaticArrays, Random
+using POMDPs, POMDPModelTools, POMDPSimulators, StaticArrays, Random, BeliefUpdaters, DeepQLearning
 include("models/common_pool.jl")
 export
     CommonPool,
@@ -46,8 +46,10 @@ export
 using POMDPPolicies, Random
 include("policies/randompolicy.jl")
 include("policies/greedypolicy.jl")
+include("policies/pathpolicy.jl")
 export
     random_policy,
-    greedy_policy
+    greedy_policy,
+    path_policy
 
 end # module

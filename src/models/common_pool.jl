@@ -128,7 +128,7 @@ up(agent::AgentState) = AgentState(agent.x,agent.y+1)
 down(agent::AgentState) = AgentState(agent.x,agent.y-1)
 
 # the common pool world mdp type
-struct CommonPool <: MDP{CommonPoolState, Symbol} # MDP is parametarized by the state and the action
+struct CommonPool <: POMDP{CommonPoolState, Symbol, AbstractArray{Bool}} # POMDP is parametarized by the state, action, and observation types
     size_x::Int64                   # x size of the grid
     size_y::Int64                   # y size of the grid
     actionmap::Dict{Symbol,Int64}   # Dict(:right=>1, :left=>2, :down=>3, :up=>4)
@@ -178,11 +178,46 @@ end =#
 # extend POMDP.actions()
 POMDPs.actions(mdp::CommonPool) = [:up, :down, :left, :right];
 
+# observations 
+function POMDPs.observation(m::CommonPool, sp::CommonPoolState, obs_range::Int)
+    #FIXME: what the heck should this be
+    agent = sp.Agent
+    resources = sp.Resources
+    o = Bool[]
+    for n in neighbors(agent,obs_range)
+        temp = []
+        for rs in available(resources)
+            push!(temp,posequal(n,rs))
+        end
+        push!(o,any(temp))
+    end
+    return Deterministic(o)
+end
+POMDPs.observation(m::CommonPool, sp::CommonPoolState) = POMDPs.observation(m, sp, 3)
+function POMDPs.observation(sp::CommonPoolState, obs_range::Int)
+    #FIXME: what the heck should this be
+    agent = sp.Agent
+    resources = sp.Resources
+    o = Bool[]
+    for n in neighbors(agent,obs_range)
+        temp = []
+        for rs in available(resources)
+            push!(temp,posequal(n,rs))
+        end
+        push!(o,any(temp))
+    end
+    return Deterministic(o)
+end
+POMDPs.observation(sp::CommonPoolState) = POMDPs.observation(sp, 3)
+
  # bounds check
 function inbounds(mdp::CommonPool,x::Int64,y::Int64)
     1 <= x <= mdp.size_x && 1 <= y <= mdp.size_y
 end
 inbounds(mdp::CommonPool, s::Union{AgentState,ResourceState}) = inbounds(mdp, s.x, s.y);
+
+# isterminal
+POMDPs.isterminal(m::CommonPool, s::CommonPoolState) = !any(getfield.(s.Resources,:on))
 
 # generative model
 function POMDPs.gen(m::CommonPool, s::CommonPoolState, a::Symbol, rng::AbstractRNG)
@@ -223,15 +258,8 @@ function POMDPs.gen(m::CommonPool, s::CommonPoolState, a::Symbol, rng::AbstractR
     sp = CommonPoolState(agent,resources)
     
     # observation model - boolean array, true if neighbor is an active resource square
-    #FIXME: what the heck should this be
-    o = []
-    for n in neighbors(agent,3)
-        temp = []
-        for rs in available(resources)
-            push!(temp,posequal(n,rs))
-        end
-        push!(o,any(temp))
-    end
+    o_dist = POMDPs.observation(m,s)
+    o = rand(o_dist)
 
     # create and return a NamedTuple for POMDPs interface
     return (sp=sp, o=o, r=r)

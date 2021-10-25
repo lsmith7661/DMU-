@@ -1,29 +1,51 @@
 # Move in the direction of most resources in observation space
 
-function greedy(o::AbstractArray{Bool})
+
+function greedy(input::Union{Deterministic,AbstractArray{Bool}})
+
+    # Dont understand why the input is a state distribution 
+    # sometimes and not an observation distribution
 
     """
-    Observation, o, is an boolean array generated 
-    from neighbors(agent,obs_range) && if resource.on
+    Observation Distribution, o_dist, is an distribution of
+    boolean arrays generated from neighbors(agent,obs_range) 
+    && if resource.on. Usually deterministic but maybe not
+    one day...
     """
+
+    # Input Handling
+    if input isa Deterministic
+        sp_dist = input
+
+        # Create observations from state
+        o_dist = POMDPs.observation(rand(sp_dist),1)
+
+        # Sample from observation distribution
+        o = rand(o_dist)
+    else
+        o = input
+    end
 
     # Reshape array into a grid around agent
-    sz = sqrt(length(o))
+    sz = Int(sqrt(length(o)))
     obsgrid = reshape(o, sz, sz)
+    obsgrid = obsgrid[end:-1:1,:] # need to flip vertically cause unwrapping
 
     # center of grid
-    c = round(sz/2)
+    c = Int(round(sz/2))
 
     # sum in each direction of the center
-    leftsum = sum(obsgrid[:,1:c])
-    rightsum = sum(obsgrid[:,c:end])
-    upsum = sum(obsgrid[1:c,:])
-    downsum = sum(obsgrid[c:end,:])
+    leftsum = sum(obsgrid[:,1:c-1])
+    rightsum = sum(obsgrid[:,c+1:end])
+    upsum = sum(obsgrid[1:c-1,:])
+    downsum = sum(obsgrid[c+1:end,:])
 
     # return action in the direction of largest sum
     # FIXME: This biases left -> right -> down -> up, if equal
     dir = max(leftsum,rightsum,upsum,downsum)
-    if dir == leftsum
+    if dir == 0
+        return rand([:up, :down, :left, :right])
+    elseif dir == leftsum
         return :left
     elseif dir == rightsum
         return :right
@@ -34,4 +56,15 @@ function greedy(o::AbstractArray{Bool})
     end 
 end
     
+
+"""
+FunctionPolicy
+Policy p = FunctionPolicy(f) returns f(x) when action(p, x) is called.
+
+action(policy::Policy, x)
+Returns the action that the policy deems best for the current state or 
+belief, x. x is a generalized information state - can be a state in an 
+MDP, a distribution in POMDP, or another specialized policy-dependent 
+representation of the information needed to choose an action.
+"""
 greedy_policy = FunctionPolicy( o -> greedy(o) )

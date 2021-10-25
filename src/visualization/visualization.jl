@@ -84,3 +84,22 @@ function plot_socials(harray) # FIXME: an array of SimHistories does not work?? 
     plot(p1, p2, p3, layout = (1, 3), legend = false)
 
 end
+
+# plot social metrics
+function plot_socials!(pref::Plot, harray) # FIXME: an array of SimHistories does not work?? ::AbstractArray{POMDPSimulators.SimHistory})
+    episodes = 1:length(harray)
+    uarray = []
+    earray = []
+    susarray = []
+
+    for h in harray
+        push!(uarray,utility(h))
+        push!(earray,equality(h))
+        push!(susarray,sustainability(h))
+    end
+
+    p1 = plot!(pref.subplots[1], episodes, uarray, xlabel = "episode number", lw = 3, title = "Utility") 
+    p2 = plot!(pref.subplots[2], episodes, earray, ylims=(0,1), xlabel = "episode number", lw = 3, title = "Equality") 
+    p3 = plot!(pref.subplots[3], episodes, susarray, xlabel = "episode number", lw = 3, title = "Sustainability")
+    return pref
+end

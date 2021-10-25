@@ -33,13 +33,14 @@ export
 # Visualization
 import POMDPModelTools: render
 using Compose
-import Plots: plot # Why do I need Unicode? Warning: Error requiring `UnicodePlots` from `Plots`
+import Plots: Plot, plot, plot! # Why do I need Unicode? Warning: Error requiring `UnicodePlots` from `Plots`
 
 include("visualization/visualization.jl")
 export 
     render,
     render_example,
-    plot_socials
+    plot_socials,
+    plot_socials!
 
 # Policies 
 using POMDPPolicies, Random

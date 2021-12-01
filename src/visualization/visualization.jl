@@ -74,14 +74,15 @@ function plot_socials(harray) # FIXME: an array of SimHistories does not work?? 
 
     for h in harray
         push!(uarray,utility(h))
-        push!(earray,equality(h))
+        #push!(earray,equality(h))
         push!(susarray,sustainability(h))
     end
 
     p1 = plot(episodes, uarray, xlabel = "episode number", lw = 3, title = "Utility") 
-    p2 = plot(episodes, earray, ylims=(0,1), xlabel = "episode number", lw = 3, title = "Equality") 
+    #p2 = plot(episodes, earray, ylims=(0,1), xlabel = "episode number", lw = 3, title = "Equality") 
     p3 = plot(episodes, susarray, xlabel = "episode number", lw = 3, title = "Sustainability")
-    plot(p1, p2, p3, layout = (1, 3), legend = false)
+    #plot(p1, p2, p3, layout = (1, 3), legend = false)
+    plot(p1, p3, layout = (1, 2), legend = false)
 
 end
 
@@ -94,12 +95,12 @@ function plot_socials!(pref::Plot, harray) # FIXME: an array of SimHistories doe
 
     for h in harray
         push!(uarray,utility(h))
-        push!(earray,equality(h))
+        #push!(earray,equality(h))
         push!(susarray,sustainability(h))
     end
 
     p1 = plot!(pref.subplots[1], episodes, uarray, xlabel = "episode number", lw = 3, title = "Utility") 
-    p2 = plot!(pref.subplots[2], episodes, earray, ylims=(0,1), xlabel = "episode number", lw = 3, title = "Equality") 
-    p3 = plot!(pref.subplots[3], episodes, susarray, xlabel = "episode number", lw = 3, title = "Sustainability")
+    #p2 = plot!(pref.subplots[2], episodes, earray, ylims=(0,1), xlabel = "episode number", lw = 3, title = "Equality") 
+    p3 = plot!(pref.subplots[2], episodes, susarray, xlabel = "episode number", lw = 3, title = "Sustainability")
     return pref
 end

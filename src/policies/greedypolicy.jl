@@ -41,16 +41,16 @@ function greedy(input::Union{Deterministic,AbstractArray{Any}})
     downsum = sum(obsgrid[c+1:end,:])
 
     # return action in the direction of largest sum
-    # FIXME: This biases left -> right -> down -> up, if equal
+    # FIXME: This biases left -> down -> right -> up, if equal
     dir = max(leftsum,rightsum,upsum,downsum)
     if dir == 0
         return rand([:up, :down, :left, :right])
     elseif dir == leftsum
         return :left
-    elseif dir == rightsum
-        return :right
     elseif dir == downsum
         return :down
+    elseif dir == rightsum
+        return :right
     elseif dir == upsum
         return :up
     end 

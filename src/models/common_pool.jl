@@ -173,12 +173,17 @@ function POMDPs.observation(m::CommonPool, sp::CommonPoolState, obs_range::Int)
     for n in neighbors(agent,obs_range)
         # Check if neighbor is inbounds
         if inbounds(m,n)
-            # Check if neighbor is a resource
+            # Check neighbor angainst all resources
             temp = []
             for rs in available(resources)
                 push!(temp,posequal(n,rs))
             end
-            push!(o,any(temp))
+            # Add result to observation
+            if any(temp)
+                push!(o,1) # If resource, make value high
+            else
+                push!(o,0.001) # If no resource, make value small nonzero (zero would turn off the neurons)
+            end
         else
             push!(o,-1)   
         end

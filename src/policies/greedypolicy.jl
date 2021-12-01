@@ -1,7 +1,7 @@
 # Move in the direction of most resources in observation space
 
 
-function greedy(input::Union{Deterministic,AbstractArray{Bool}})
+function greedy(input::Union{Deterministic,AbstractArray{Any}})
 
     # Dont understand why the input is a state distribution 
     # sometimes and not an observation distribution

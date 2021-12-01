@@ -127,7 +127,7 @@ up(agent::AgentState) = AgentState(agent.x,agent.y+1)
 down(agent::AgentState) = AgentState(agent.x,agent.y-1)
 
 # the common pool world mdp type
-struct CommonPool <: POMDP{CommonPoolState, Symbol, AbstractArray{Bool}} # POMDP is parametarized by the state, action, and observation types
+struct CommonPool <: POMDP{CommonPoolState, Symbol, AbstractArray{Any}} # POMDP is parametarized by the state, action, and observation types
     size_x::Int64                   # x size of the grid
     size_y::Int64                   # y size of the grid
     actionmap::Dict{Symbol,Int64}   # Dict(:right=>1, :left=>2, :down=>3, :up=>4)
@@ -139,7 +139,7 @@ function CommonPool(;
     sy::Int64=9,
     amap::Dict=Dict(:right=>1, :left=>2, :down=>3, :up=>4),
     r::Int64=10,
-    discount_factor::Float64=0.9
+    discount_factor::Float64=0.99
     )
     return CommonPool(sx, sy, amap, r, discount_factor)
 end
@@ -148,51 +148,46 @@ function CommonPool(
     sy::Int64;
     amap::Dict=Dict(:right=>1, :left=>2, :down=>3, :up=>4),
     r::Int64=10,
-    discount_factor::Float64=0.9
+    discount_factor::Float64=0.99
     )
     return CommonPool(sx, sy, amap, r, discount_factor)
 end
 
+ # bounds check
+ function inbounds(mdp::CommonPool,x::Int64,y::Int64)
+    1 <= x <= mdp.size_x && 1 <= y <= mdp.size_y
+end
+inbounds(mdp::CommonPool, s::Union{AgentState,ResourceState}) = inbounds(mdp, s.x, s.y);
+
 # discount factor
 POMDPs.discount(mdp::CommonPool) = mdp.discount_factor
-
-# need to use generative model
-#= extend POMMDP.states() 
-function POMDPs.states(mdp::CommonPool)
-    agent = AgentState[]        # initialize an array of agent states
-    for y = 1:mdp.size_y, x = 1:mdp.size_x
-        push!(agent, AgentState(x,y))
-    end
-    resource = ResourceState[]  # initialize an array of resource states
-    for y = 1:mdp.size_y, x = 1:mdp.size_x, b = [true,false], p = [0.0,0.05,0.01,0.1]
-        push!(resource, ResourceState(x,y,b,p))
-    end
-    s = CommonPoolState[]       # initialize an array of mdp states
-    #FIXME: CommonPoolStates contain array of resources, not resources.... gaaaah
-    for a in agent, r in resource
-        push!(s,CommonPoolState(a,r))
-    end
-end =#
 
 # extend POMDP.actions()
 POMDPs.actions(mdp::CommonPool) = [:up, :down, :left, :right];
 
 # observations 
 function POMDPs.observation(m::CommonPool, sp::CommonPoolState, obs_range::Int)
-    #FIXME: what the heck should this be
     agent = sp.Agent
     resources = sp.Resources
-    o = Bool[]
+    o = []
     for n in neighbors(agent,obs_range)
-        temp = []
-        for rs in available(resources)
-            push!(temp,posequal(n,rs))
+        # Check if neighbor is inbounds
+        if inbounds(m,n)
+            # Check if neighbor is a resource
+            temp = []
+            for rs in available(resources)
+                push!(temp,posequal(n,rs))
+            end
+            push!(o,any(temp))
+        else
+            push!(o,-1)   
         end
-        push!(o,any(temp))
     end
     return Deterministic(o)
 end
 POMDPs.observation(m::CommonPool, sp::CommonPoolState) = POMDPs.observation(m, sp, 3)
+
+#= Sometimes POMDPs need observations defined as only a function of the state, in those cases redefine at time of use
 function POMDPs.observation(sp::CommonPoolState, obs_range::Int)
     #FIXME: what the heck should this be
     agent = sp.Agent
@@ -208,14 +203,9 @@ function POMDPs.observation(sp::CommonPoolState, obs_range::Int)
     return Deterministic(o)
 end
 POMDPs.observation(sp::CommonPoolState) = POMDPs.observation(sp, 3)
+=#
 
-POMDPs.initialobs(pomdp::CommonPool, s::CommonPoolState) = POMDPs.observation(s)
-
- # bounds check
-function inbounds(mdp::CommonPool,x::Int64,y::Int64)
-    1 <= x <= mdp.size_x && 1 <= y <= mdp.size_y
-end
-inbounds(mdp::CommonPool, s::Union{AgentState,ResourceState}) = inbounds(mdp, s.x, s.y);
+POMDPs.initialobs(pomdp::CommonPool, s::CommonPoolState) = POMDPs.observation(pomdp, s)
 
 # isterminal
 POMDPs.isterminal(m::CommonPool, s::CommonPoolState) = !any(getfield.(s.Resources,:on))
@@ -258,9 +248,9 @@ function POMDPs.gen(m::CommonPool, s::CommonPoolState, a::Symbol, rng::AbstractR
     # update state (s')
     sp = CommonPoolState(agent,resources)
     
-    # observation model - boolean array, true if neighbor is an active resource square
+    # observation model - array, +1 if neighbor is an active resource square, -1 if out of bounds, 0 if empty
     o_dist = POMDPs.observation(m,s)
-    o = rand(o_dist)
+    o = rand(o_dist) # this is deterministic 
 
     # create and return a NamedTuple for POMDPs interface
     return (sp=sp, o=o, r=r)
